@@ -11,8 +11,9 @@ def print_model(model):
         os.remove("temp.lp")
 
 if __name__=="__main__":
-    big_m_1 = 1000
-    big_m_2 = 100
+    big_m_1 = 10000
+    big_m_2 = 1000
+    big_m_3 = 10
     
     stations = 10
 
@@ -24,7 +25,7 @@ if __name__=="__main__":
         (0, 0, 2, 0, 2, 0, 0, 0, 0, 1),
         (0, 2, 0, 4, 0, 0, 0, 0, 0, 1),
         (0, 0, 4, 0, 2, 0, 0, 0, 0, 0),
-        (0, 2, 0, 2, 0, 3, 3, 0, 9, 4),
+        (0, 2, 0, 2, 0, 3, 3, 0, 2, 4),
         (0, 0, 0, 0, 3, 0, 1, 0, 0, 0),
         (0, 0, 0, 0, 3, 1, 0, 1, 0, 2),
         (2, 0, 0, 0, 0, 0, 1, 0, 2, 0),
@@ -84,10 +85,14 @@ if __name__=="__main__":
             lin_expr=(
                 station_frequency[i] - station_frequency[j]
                 >=
-                minimum_freq_differences[i][j] * frequence_i_bigger_j[i][j]
+                (
+                    minimum_freq_differences[i][j] 
+                    -
+                    frequence_i_bigger_j[i][j] * big_m_3
+                )
             )
         )
-        for i in range(stations) for j in range(stations)
+        for i in range(stations) for j in range(i+1, stations)
         if minimum_freq_differences[i][j] > 0
     ]
 
@@ -97,10 +102,13 @@ if __name__=="__main__":
             lin_expr=(
                 station_frequency[j] - station_frequency[i]
                 >=
-                minimum_freq_differences[i][j] * frequence_i_bigger_j[i][j]
+                (
+                    minimum_freq_differences[i][j] 
+                    - (1 - frequence_i_bigger_j[i][j]) * big_m_3
+                )
             )
         )
-        for i in range(stations) for j in range(stations)
+        for i in range(stations) for j in range(i+1, stations)
         if minimum_freq_differences[i][j] > 0
     ]
 
@@ -113,32 +121,33 @@ if __name__=="__main__":
                 1/big_m_2 * (station_frequency[i] - station_frequency[j])
             )
         )
-        for i in range(stations) for j in range(stations)
+        for i in range(stations) for j in range(i+1, stations)
+        if (minimum_freq_differences[i][j] > 0)
     ]
     
-    constrs_max_freq =  [
-        model.add_constr(
-            name="max_freq_" + str(i),
-            lin_expr=(
-                max_freq
-                >=
-                station_frequency[i]
-            )
-        )
-        for i in range(stations)
-    ]
+    # constrs_max_freq =  [
+    #     model.add_constr(
+    #         name="max_freq_" + str(i),
+    #         lin_expr=(
+    #             max_freq
+    #             >=
+    #             station_frequency[i]
+    #         )
+    #     )
+    #     for i in range(stations)
+    # ]
 
-    constrs_min_freq =  [
-        model.add_constr(
-            name="min_freq_" + str(i),
-            lin_expr=(
-                min_freq
-                <=
-                station_frequency[i]
-            )
-        )
-        for i in range(stations)
-    ]
+    # constrs_min_freq =  [
+    #     model.add_constr(
+    #         name="min_freq_" + str(i),
+    #         lin_expr=(
+    #             min_freq
+    #             <=
+    #             station_frequency[i]
+    #         )
+    #     )
+    #     for i in range(stations)
+    # ]
 
 
     print_model(model)
